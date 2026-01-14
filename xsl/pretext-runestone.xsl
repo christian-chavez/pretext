@@ -342,19 +342,32 @@ along with PreTeXt.  If not, see <http://www.gnu.org/licenses/>.
 <!-- of exercises, so we pass the exercises in as a parameter     -->
 <xsl:template match="exercises" mode="runestone-timed-exam">
     <xsl:param name="the-exercises"/>
+    <xsl:param name="b-manifest" select="false()"/>
 
     <!-- Since the component wraps the exercises, we do not need any  -->
     <!-- restriction about being at teh Runestone "subchapter" level. -->
     <xsl:if test="$b-host-runestone">
         <div class="timedAssessment">
+            <!-- for the manifest only, report information about -->
+            <!-- the "exercises" division being re-purposed      -->
+            <xsl:if test="$b-manifest">
+                <title>
+                    <xsl:apply-templates select="." mode="title-full"/>
+                </title>
+                <number>
+                    <xsl:apply-templates select="." mode="number"/>
+                </number>
+            </xsl:if>
             <ul data-component="timedAssessment" data-question_label="">
                 <!-- a Runestone id -->
                 <xsl:apply-templates select="." mode="runestone-id-attribute"/>
                 <xsl:apply-templates select="." mode="runestone-timed-exam-attributes"/>
                 <!-- the actual list of exercises -->
                 <xsl:copy-of select="$the-exercises"/>
-                <!-- only at "section" level. only when building for a Runestone server -->
-                <xsl:apply-templates select="." mode="runestone-progress-indicator"/>
+                <xsl:if test="not($b-manifest)">
+                    <!-- only at "section" level. only when building for a Runestone server -->
+                    <xsl:apply-templates select="." mode="runestone-progress-indicator"/>
+                </xsl:if>
             </ul>
         </div>
     </xsl:if>
@@ -608,9 +621,8 @@ along with PreTeXt.  If not, see <http://www.gnu.org/licenses/>.
         <xsl:with-param name="the-exercises">
             <xsl:apply-templates select=".//exercise" mode="runestone-manifest"/>
         </xsl:with-param>
+        <xsl:with-param name="b-manifest" select="true()"/>
     </xsl:apply-templates>
-    <xsl:comment> The "progress indicator" above is not necessary as part </xsl:comment>
-    <xsl:comment> of the manifest.  Processing should simply ignore it.   </xsl:comment>
 </xsl:template>
 
 <!-- Properties to report for each division -->

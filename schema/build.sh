@@ -27,10 +27,23 @@
 #  2017-07-21  For release
 #  2019-05-24  Updates as DocFlex becomes FlexDoc (and v1.12.3)
 #  2020-11-11  FlexDoc v1.12.5
+#  2025-11-12  Removed FlexDoc in favor of Siefken's browser
 
 #  This is designed for use in distributing derived products
 #  from the PreTeXt schema.  So make a copy and adjust paths
 #  to suit your particular purposes.
+
+#  Prerequites
+#
+#  1.  PreTeXt repository (where this file lives)
+#  2.  "trang" conversion tool, on your $PATH
+#       a.  "trang" package for Debian
+#       b.  "jing-trang" package for Ubuntu
+
+# Usage
+#
+# 1.  Assumes  ${PTX}/schema  is current working directory
+# 2.  No arguments, just "./build.sh"
 
 shopt -s -o nounset
 
@@ -39,33 +52,23 @@ shopt -s -o nounset
 # ***********
 
 # PreTeXt distribution
-declare MB=${HOME}/mathbook/mathbook
-# FlexDoc installation
-declare FDH=/opt/flexdoc/flexdoc-xml-1.12.5
-
-# DocFlex output directory
-declare FDOUTDIR=${HOME}/mathbook/website/pretextbook.org/doc/schema
-# Java root to locate executables
-# (if not set by system: uncomment and set)
-declare JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64/
+# Likely "/path/to/pretext"
+# RAB's path is historical
+declare PTX=${HOME}/mathbook/mathbook
 
 # *************
 # Derived paths
 # *************
 
 # XSL for literate programming tool
-declare MBXSL=${MB}/xsl
-# Java particulars for documentation generation
-# Quotes to protect spaces (use on filenames?)
-declare JAVA_OPTIONS="-Xms512m -Xmx1024m"
-declare CLASS_PATH="${FDH}/lib/xml-apis.jar:${FDH}/lib/xercesImpl.jar:${FDH}/lib/resolver.jar:${FDH}/lib/flexdoc-xml.jar:/usr/share/openjfx/lib/*"
+declare XSL=${PTX}/xsl
 
 # ******************
 # Grammar generation
 # ******************
 
 # PreTeXt extraction of RELAX-NG compact schema
-xsltproc ${MBXSL}/pretext-litprog.xsl pretext.xml
+xsltproc ${XSL}/pretext-litprog.xsl pretext.xml
 
 # System trang conversion to RELAX-NG XML schema
 trang -I rnc -O rng pretext.rnc pretext.rng
@@ -76,27 +79,9 @@ trang -I rnc -O rng pretext-dev.rnc pretext-dev.rng
 trang -o disable-abstract-elements -I rnc -O xsd pretext.rnc pretext.xsd
 
 # And the same steps for the publication-schema
-xsltproc ${MBXSL}/pretext-litprog.xsl publication-schema.xml
+xsltproc ${XSL}/pretext-litprog.xsl publication-schema.xml
 trang -I rnc -O rng publication-schema.rnc publication-schema.rng
 trang -o disable-abstract-elements -I rnc -O xsd publication-schema.rnc publication-schema.xsd
-
-# ************************
-# Documentation Generation
-# ************************
-#
-# We use DocFlex/XML - XSDDoc - XML Schema Documentation Generator
-#
-# http://www.filigris.com/docflex-xml/xsddoc/
-#
-# Execution and options cribbed from DocFlex distribution
-#
-# -docflexconfig specifies a DocFlex Linux-specific configuration
-#  v1.12 config now in bin directory
-#  v1.12 requires Oracle Java (ie OpenJDK lacks "javafx")
-
-${JAVA_HOME}/bin/java ${JAVA_OPTIONS} -cp ${CLASS_PATH} xyz.flexdoc.xml.Generator \
-    -flexdocconfig ${FDH}/bin/linux/flexdoc.config -quiet \
-    -nodialog -launchviewer=false -d ${FDOUTDIR} pretext.xsd
 
 # exit cleanly
 exit 0
